@@ -1,8 +1,8 @@
 import { useState, ReactNode } from 'react';
 import { Navigate, useLocation } from 'react-router-dom';
-import LoadingScreen from '../components/LoadingScreen';
 import { PATH_AUTH } from '../routes/paths';
 import { useAuthContext } from './useAuthContext';
+import LoadingScreen from 'src/components/loading-screen';
 
 type AuthGuardProps = {
   children: ReactNode;

@@ -1,28 +1,33 @@
-import { createContext, useEffect, useReducer, useCallback } from 'react';
+import { createContext, useEffect, useReducer, useCallback } from "react";
 
-import { publicAxios } from '../utils/axios';
-import { isValidToken, setSession, removeSession, getSession } from './utils';
+import { publicAxios } from "../utils/axios";
+import { isValidToken, setSession, removeSession, getSession } from "./utils";
 import {
   ActionMapType,
   AuthStateType,
   AuthUserType,
   AuthContextType,
-} from './types';
-import { AuthUser } from 'src/types/user.type';
-import { PATH_AUTH } from 'src/routes/paths';
-import { ENDPOINTS } from 'src/api/endpoints';
+  MethodType,
+} from "./types";
+import { AuthUser } from "src/types/user.type";
+import { PATH_AUTH } from "src/routes/paths";
+import { ENDPOINTS } from "src/api/endpoints";
+import { initializeApp } from "firebase/app";
+import { getAuth, signInWithPopup, GoogleAuthProvider } from "firebase/auth";
+import { FIREBASE_API } from "src/config";
 
 enum Types {
-  INITIAL = 'INITIAL',
-  LOGIN = 'LOGIN',
-  REGISTER = 'REGISTER',
-  LOGOUT = 'LOGOUT',
+  INITIAL = "INITIAL",
+  LOGIN = "LOGIN",
+  REGISTER = "REGISTER",
+  LOGOUT = "LOGOUT",
 }
 
 type Payload = {
   [Types.INITIAL]: {
     isAuthenticated: boolean;
     user: AuthUserType;
+    method: MethodType;
   };
   [Types.LOGIN]: {
     user: AuthUserType;
@@ -39,6 +44,7 @@ const initialState: AuthStateType = {
   isInitialized: false,
   isAuthenticated: false,
   user: null,
+  method: null,
 };
 
 const reducer = (state: AuthStateType, action: ActionsType) => {
@@ -47,6 +53,7 @@ const reducer = (state: AuthStateType, action: ActionsType) => {
       isInitialized: true,
       isAuthenticated: action.payload.isAuthenticated,
       user: action.payload.user,
+      method: action.payload.method,
     };
   }
   if (action.type === Types.LOGIN) {
@@ -82,6 +89,11 @@ type AuthProviderProps = {
 export function AuthProvider({ children }: AuthProviderProps) {
   const [state, dispatch] = useReducer(reducer, initialState);
 
+  const firebaseApp = initializeApp(FIREBASE_API);
+
+  const AUTH = getAuth(firebaseApp);
+  const GOOGLE_PROVIDER = new GoogleAuthProvider();
+
   const initialize = useCallback(async () => {
     try {
       const authUser: AuthUser | null = getSession();
@@ -100,6 +112,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
           payload: {
             isAuthenticated: true,
             user,
+            method: "jwt",
           },
         });
       } else {
@@ -108,6 +121,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
           payload: {
             isAuthenticated: false,
             user: null,
+            method: "jwt",
           },
         });
       }
@@ -118,6 +132,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
         payload: {
           isAuthenticated: false,
           user: null,
+          method: "jwt",
         },
       });
     }
@@ -143,6 +158,10 @@ export function AuthProvider({ children }: AuthProviderProps) {
     });
   };
 
+  const loginWithGoogle = () => {
+    signInWithPopup(AUTH, GOOGLE_PROVIDER);
+  };
+
   const register = async (
     email: string,
     password: string,
@@ -157,7 +176,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
     });
     const { accessToken, user } = response.data;
 
-    localStorage.setItem('accessToken', accessToken);
+    localStorage.setItem("accessToken", accessToken);
 
     dispatch({
       type: Types.REGISTER,
@@ -192,6 +211,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
         login,
         logout,
         register,
+        loginWithGoogle,
       }}
     >
       {children}

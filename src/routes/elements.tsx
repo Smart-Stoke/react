@@ -1,5 +1,5 @@
 import { Suspense, lazy, ElementType } from 'react';
-import LoadingScreen from 'src/components/LoadingScreen';
+import LoadingScreen from 'src/components/loading-screen';
 
 const Loadable = (Component: ElementType) => (props: any) =>
   (
