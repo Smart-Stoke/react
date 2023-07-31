@@ -1,14 +1,12 @@
-import React from "react";
-import logo from "./logo.svg";
-import "./App.css";
+import router from './routes';
+import { RouterProvider } from 'react-router-dom';
+import { AuthProvider } from './auth/AuthContext';
 
 function App() {
   return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-      </header>
-    </div>
+    <AuthProvider>
+      <RouterProvider router={router} />
+    </AuthProvider>
   );
 }
 
